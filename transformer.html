@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformer Architecture Explorer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Playfair+Display:wght@700;900&display=swap');
+        
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #141b3d;
+            --bg-tertiary: #1e2749;
+            --accent-primary: #00ffcc;
+            --accent-secondary: #ff00ff;
+            --accent-tertiary: #00ccff;
+            --text-primary: #e0e6ff;
+            --text-secondary: #8891b8;
+            --text-dim: #5a6284;
+            --border-color: #2a3558;
+            --success: #00ff88;
+            --warning: #ffaa00;
+            --error: #ff4466;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        header {
+            padding: 2rem 3rem;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-bottom: 2px solid var(--accent-primary);
+            box-shadow: 0 4px 20px rgba(0, 255, 204, 0.1);
+        }
+        
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-tertiary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            flex: 1;
+            gap: 0;
+        }
+        
+        /* Control Panel */
+        .control-panel {
+            background: var(--bg-secondary);
+            border-right: 2px solid var(--border-color);
+            padding: 2rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 140px);
+        }
+        
+        .input-section {
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+            font-weight: 800;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        textarea {
+            width: 100%;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: all 0.3s ease;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(0, 255, 204, 0.1);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        button {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        button:hover {
+            background: var(--accent-tertiary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 204, 0.3);
+        }
+        
+        button.secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+        
+        button.secondary:hover {
+            border-color: var(--accent-secondary);
+            background: var(--bg-tertiary);
+        }
+        
+        /* Parameters */
+        .parameters {
+            margin-top: 2rem;
+        }
+        
+        .param-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .param-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .param-value {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-primary);
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(0, 255, 204, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: var(--accent-tertiary);
+            box-shadow: 0 0 0 6px rgba(0, 255, 204, 0.3);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: var(--accent-primary);
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 0 0 4px rgba(0, 255, 204, 0.2);
+        }
+        
+        .toggle-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .toggle-btn {
+            flex: 1;
+            padding: 0.5rem;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .toggle-btn.active {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            border-color: var(--accent-primary);
+            font-weight: 600;
+        }
+        
+        /* Visualization Area */
+        .visualization-area {
+            padding: 2rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 140px);
+        }
+        
+        .step-container {
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--bg-primary);
+            font-size: 1.1rem;
+        }
+        
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        
+        .step-content {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .matrix-viz {
+            display: grid;
+            gap: 0.25rem;
+            margin: 1rem 0;
+            max-width: 600px;
+        }
+        
+        .matrix-cell {
+            background: var(--bg-tertiary);
+            padding: 0.5rem;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .matrix-cell:hover {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        
+        .attention-heatmap {
+            display: grid;
+            gap: 2px;
+            margin: 1rem 0;
+        }
+        
+        .attention-cell {
+            background: var(--bg-tertiary);
+            padding: 0.75rem;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        .token-flow {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+        
+        .token {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--accent-primary);
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--accent-primary);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .arrow {
+            color: var(--accent-secondary);
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+        
+        .info-box {
+            background: var(--bg-tertiary);
+            border-left: 4px solid var(--accent-secondary);
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .code-block {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .probability-bar {
+            height: 30px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            margin: 0.5rem 0;
+        }
+        
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-tertiary));
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--bg-primary);
+        }
+        
+        .prediction-list {
+            margin: 1rem 0;
+        }
+        
+        .prediction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .prediction-item:hover {
+            border-color: var(--accent-primary);
+            transform: translateX(4px);
+        }
+        
+        .prediction-token {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .prediction-prob {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+        
+        .architecture-diagram {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1rem 0;
+        }
+        
+        .layer-box {
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-primary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            position: relative;
+        }
+        
+        .layer-box::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -20px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid var(--accent-primary);
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            transform: translateY(-50%);
+        }
+        
+        .layer-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .layer-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .metric-card {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--accent-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-tertiary);
+        }
+
+        .vector-viz {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .vector-dim {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .comparison-item {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+
+        .comparison-title {
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Transformer Architecture Explorer</h1>
+            <p class="subtitle">Interactive visualization of how text flows through a transformer model from input to prediction</p>
+        </header>
+        
+        <div class="main-layout">
+            <div class="control-panel">
+                <div class="input-section">
+                    <div class="section-title">Input Text</div>
+                    <div class="input-wrapper">
+                        <textarea id="inputText" placeholder="Enter your text here... (e.g., 'The cat sat on the')">The cat sat on the</textarea>
+                    </div>
+                    <div class="button-group">
+                        <button id="processBtn">Process</button>
+                        <button id="clearBtn" class="secondary">Clear</button>
+                    </div>
+                </div>
+                
+                <div class="parameters">
+                    <div class="section-title">Mode</div>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-mode="inference">Inference</button>
+                        <button class="toggle-btn" data-mode="training">Training</button>
+                    </div>
+                    
+                    <div class="section-title" style="margin-top: 2rem;">Model Parameters</div>
+                    
+                    <div class="param-group">
+                        <div class="param-label">
+                            <span>Temperature</span>
+                            <span class="param-value" id="tempValue">0.7</span>
+                        </div>
+                        <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                        <div class="info-box" style="margin-top: 0.5rem; font-size: 0.75rem;">
+                            Controls randomness in predictions. Lower = more deterministic, Higher = more creative
+                        </div>
+                    </div>
+                    
+                    <div class="param-group">
+                        <div class="param-label">
+                            <span>Embedding Dimension</span>
+                            <span class="param-value" id="embDimValue">512</span>
+                        </div>
+                        <input type="range" id="embDim" min="128" max="1024" step="128" value="512">
+                        <div class="info-box" style="margin-top: 0.5rem; font-size: 0.75rem;">
+                            Size of vector representation for each token
+                        </div>
+                    </div>
+                    
+                    <div class="param-group">
+                        <div class="param-label">
+                            <span>Number of Heads</span>
+                            <span class="param-value" id="numHeadsValue">8</span>
+                        </div>
+                        <input type="range" id="numHeads" min="1" max="16" step="1" value="8">
+                        <div class="info-box" style="margin-top: 0.5rem; font-size: 0.75rem;">
+                            Parallel attention mechanisms for different representation subspaces
+                        </div>
+                    </div>
+                    
+                    <div class="param-group">
+                        <div class="param-label">
+                            <span>Number of Layers</span>
+                            <span class="param-value" id="numLayersValue">6</span>
+                        </div>
+                        <input type="range" id="numLayers" min="1" max="12" step="1" value="6">
+                        <div class="info-box" style="margin-top: 0.5rem; font-size: 0.75rem;">
+                            Depth of the transformer network
+                        </div>
+                    </div>
+
+                    <div class="section-title" style="margin-top: 2rem;">Attention Type</div>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-attention="full">Full</button>
+                        <button class="toggle-btn" data-attention="gqa">GQA</button>
+                        <button class="toggle-btn" data-attention="flash">Flash</button>
+                    </div>
+
+                    <div class="section-title" style="margin-top: 2rem;">Show Embedding Training</div>
+                    <div class="toggle-group">
+                        <button class="toggle-btn" id="showEmbeddingBtn">Show How Embeddings are Trained</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="visualization-area" id="visualizationArea">
+                <div class="info-box" style="text-align: center; padding: 3rem; font-size: 1.1rem;">
+                    👆 Enter text and click "Process" to visualize how it flows through the transformer architecture
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let state = {
+            inputText: 'The cat sat on the',
+            mode: 'inference',
+            temperature: 0.7,
+            embDim: 512,
+            numHeads: 8,
+            numLayers: 6,
+            attentionType: 'full'
+        };
+
+        // DOM Elements
+        const inputText = document.getElementById('inputText');
+        const processBtn = document.getElementById('processBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const visualizationArea = document.getElementById('visualizationArea');
+        const tempSlider = document.getElementById('temperature');
+        const embDimSlider = document.getElementById('embDim');
+        const numHeadsSlider = document.getElementById('numHeads');
+        const numLayersSlider = document.getElementById('numLayers');
+
+        // Event Listeners
+        processBtn.addEventListener('click', processInput);
+        clearBtn.addEventListener('click', clearAll);
+        document.getElementById('showEmbeddingBtn').addEventListener('click', showEmbeddingTraining);
+        
+        tempSlider.addEventListener('input', (e) => {
+            state.temperature = parseFloat(e.target.value);
+            document.getElementById('tempValue').textContent = state.temperature.toFixed(1);
+        });
+        
+        embDimSlider.addEventListener('input', (e) => {
+            state.embDim = parseInt(e.target.value);
+            document.getElementById('embDimValue').textContent = state.embDim;
+        });
+        
+        numHeadsSlider.addEventListener('input', (e) => {
+            state.numHeads = parseInt(e.target.value);
+            document.getElementById('numHeadsValue').textContent = state.numHeads;
+        });
+        
+        numLayersSlider.addEventListener('input', (e) => {
+            state.numLayers = parseInt(e.target.value);
+            document.getElementById('numLayersValue').textContent = state.numLayers;
+        });
+
+        // Mode toggle
+        document.querySelectorAll('[data-mode]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.mode = btn.dataset.mode;
+            });
+        });
+
+        // Attention type toggle
+        document.querySelectorAll('[data-attention]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-attention]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.attentionType = btn.dataset.attention;
+            });
+        });
+
+        function clearAll() {
+            inputText.value = '';
+            visualizationArea.innerHTML = '<div class="info-box" style="text-align: center; padding: 3rem; font-size: 1.1rem;">👆 Enter text and click "Process" to visualize how it flows through the transformer architecture</div>';
+        }
+
+        function showEmbeddingTraining() {
+            visualizationArea.innerHTML = '';
+            
+            // Introduction
+            addStep(1, 'What Are Embeddings?', `
+                <div class="info-box">
+                    <strong>Core Concept:</strong> Embeddings are dense vector representations that capture semantic meaning of tokens (words/subwords).
+                </div>
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <div class="comparison-title">Traditional Approach</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>One-Hot Encoding:</strong><br>
+                            • Vocabulary size: 50,000<br>
+                            • Each word: [0,0,0,...1,...0]<br>
+                            • Vector size: 50,000<br>
+                            • ❌ No semantic relationships<br>
+                            • ❌ Sparse and inefficient
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Modern Embeddings</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Dense Vectors:</strong><br>
+                            • Vocabulary size: 50,000<br>
+                            • Each word: [0.23, -0.45, 0.67, ...]<br>
+                            • Vector size: ${state.embDim}<br>
+                            • ✅ Captures semantic meaning<br>
+                            • ✅ Dense and efficient
+                        </div>
+                    </div>
+                </div>
+                <div class="code-block" style="margin-top: 1rem;">
+# Example: Similar words have similar vectors
+king    = [0.25, 0.87, -0.34, 0.52, ...]
+queen   = [0.23, 0.85, -0.31, 0.49, ...]  ← Similar!
+apple   = [-0.62, 0.12, 0.78, -0.91, ...] ← Different!
+
+# Vector similarity (cosine similarity)
+similarity(king, queen) = 0.92  ← High!
+similarity(king, apple) = 0.15  ← Low!
+                </div>
+            `);
+
+            // Embedding Matrix
+            addStep(2, 'The Embedding Matrix', `
+                <div class="info-box">
+                    <strong>What is it?</strong> A learnable lookup table that maps token IDs to dense vectors.
+                </div>
+                <div class="architecture-diagram">
+                    <div class="layer-box">
+                        <div class="layer-title">Embedding Matrix Structure</div>
+                        <div class="layer-desc">Shape: [Vocabulary Size × Embedding Dimension]</div>
+                        <div class="code-block" style="margin-top: 1rem;">
+# Matrix dimensions
+Vocabulary Size: 50,257 tokens
+Embedding Dimension: ${state.embDim}
+Total Parameters: ${(50257 * state.embDim).toLocaleString()}
+
+# Each row is one token's embedding vector
+Matrix[0]     → [0.12, -0.45, 0.67, ...] (token 0: &lt;PAD&gt;)
+Matrix[1]     → [0.23, 0.89, -0.34, ...] (token 1: &lt;START&gt;)
+Matrix[100]   → [-0.56, 0.34, 0.12, ...] (token 100: "the")
+Matrix[5678]  → [0.78, -0.23, 0.91, ...] (token 5678: "cat")
+...
+Matrix[50256] → [0.45, 0.67, -0.12, ...] (token 50256: &lt;END&gt;)
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-grid" style="margin-top: 1.5rem;">
+                    <div class="metric-card">
+                        <div class="metric-value">${(50257 * state.embDim / 1000000).toFixed(1)}M</div>
+                        <div class="metric-label">Embedding Params</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">50,257</div>
+                        <div class="metric-label">Vocabulary</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${state.embDim}</div>
+                        <div class="metric-label">Vector Dimension</div>
+                    </div>
+                </div>
+            `);
+
+            // Training Methods
+            addStep(3, 'Embedding Training Methods', `
+                <div class="info-box">
+                    <strong>Two Main Approaches:</strong> Embeddings can be trained separately (Word2Vec, GloVe) or jointly with the main model (Transformer).
+                </div>
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <div class="comparison-title">1. Separate Pre-training</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Methods:</strong><br>
+                            • <strong>Word2Vec</strong> (2013)<br>
+                            • <strong>GloVe</strong> (2014)<br>
+                            • <strong>FastText</strong> (2016)<br><br>
+                            <strong>Approach:</strong><br>
+                            Train embeddings on large text corpus first, then use them as fixed or fine-tunable features
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">2. Joint Training (Modern)</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Methods:</strong><br>
+                            • <strong>BERT</strong> (2018)<br>
+                            • <strong>GPT</strong> (2018+)<br>
+                            • <strong>T5, LLaMA</strong> etc.<br><br>
+                            <strong>Approach:</strong><br>
+                            Embeddings trained end-to-end with transformer model on prediction task
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            // Word2Vec CBOW
+            addStep(4, 'Method 1: Word2Vec CBOW (Continuous Bag of Words)', `
+                <div class="info-box">
+                    <strong>Goal:</strong> Predict a target word from its surrounding context words.
+                </div>
+                <div class="code-block">
+# Example sentence: "The cat sat on the mat"
+# Window size: 2
+
+Context: ["The", "cat", "on", "the"] → Target: "sat"
+Context: ["cat", "sat", "the", "mat"] → Target: "on"
+                </div>
+                <div class="architecture-diagram" style="margin-top: 1.5rem;">
+                    <div class="layer-box">
+                        <div class="layer-title">Input Layer</div>
+                        <div class="layer-desc">Context words as one-hot vectors</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+"The":  [1, 0, 0, 0, ...]
+"cat":  [0, 1, 0, 0, ...]
+"on":   [0, 0, 1, 0, ...]
+"the":  [0, 0, 0, 1, ...]
+                        </div>
+                    </div>
+                    <div class="layer-box">
+                        <div class="layer-title">Embedding Layer (Learnable)</div>
+                        <div class="layer-desc">Maps to ${state.embDim}-dimensional vectors</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+Each word → [${generateVector(4).join(', ')}, ...]
+Average all context embeddings
+                        </div>
+                    </div>
+                    <div class="layer-box">
+                        <div class="layer-title">Hidden Layer</div>
+                        <div class="layer-desc">Average of context embeddings</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+h = (e_The + e_cat + e_on + e_the) / 4
+Shape: [${state.embDim}]
+                        </div>
+                    </div>
+                    <div class="layer-box" style="margin-bottom: 0;">
+                        <div class="layer-title">Output Layer (Softmax)</div>
+                        <div class="layer-desc">Predict target word</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+P(word | context) for all 50,257 words
+Predicted: "sat" with probability 0.78
+                        </div>
+                    </div>
+                </div>
+                <div class="info-box" style="margin-top: 1rem;">
+                    <strong>Training:</strong> Use cross-entropy loss and backpropagation. The embedding matrix is updated to make context predict target better.
+                </div>
+            `);
+
+            // Word2Vec Skip-gram
+            addStep(5, 'Method 2: Word2Vec Skip-gram', `
+                <div class="info-box">
+                    <strong>Goal:</strong> Opposite of CBOW - predict context words from target word.
+                </div>
+                <div class="code-block">
+# Example sentence: "The cat sat on the mat"
+# Window size: 2
+
+Target: "sat" → Context: ["The", "cat", "on", "the"]
+Target: "on"  → Context: ["cat", "sat", "the", "mat"]
+                </div>
+                <div class="architecture-diagram" style="margin-top: 1.5rem;">
+                    <div class="layer-box">
+                        <div class="layer-title">Input Layer</div>
+                        <div class="layer-desc">Single target word (one-hot)</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+"sat": [0, 0, 0, 1, 0, 0, ...]
+                        </div>
+                    </div>
+                    <div class="layer-box">
+                        <div class="layer-title">Embedding Layer</div>
+                        <div class="layer-desc">Look up embedding vector</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+e_sat = [${generateVector(4).join(', ')}, ...]
+Shape: [${state.embDim}]
+                        </div>
+                    </div>
+                    <div class="layer-box" style="margin-bottom: 0;">
+                        <div class="layer-title">Output Layer (Multiple Softmax)</div>
+                        <div class="layer-desc">Predict each context word</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+P("The" | "sat") = 0.32
+P("cat" | "sat") = 0.45
+P("on"  | "sat") = 0.67
+P("the" | "sat") = 0.28
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-grid" style="margin-top: 1.5rem;">
+                    <div class="comparison-item">
+                        <div class="comparison-title">CBOW vs Skip-gram</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>CBOW:</strong><br>
+                            • Faster training<br>
+                            • Better for frequent words<br>
+                            • Smooths over contexts<br><br>
+                            <strong>Skip-gram:</strong><br>
+                            • Better for rare words<br>
+                            • Captures more nuanced relationships<br>
+                            • Slower but more accurate
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Negative Sampling</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Problem:</strong> Softmax over 50K words is slow<br><br>
+                            <strong>Solution:</strong><br>
+                            • Sample 5-20 "negative" words<br>
+                            • Binary classification: is word in context?<br>
+                            • Much faster: O(k) instead of O(V)<br>
+                            • Maintains quality
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            // Modern approach
+            addStep(6, 'Method 3: End-to-End Training (Modern LLMs)', `
+                <div class="info-box">
+                    <strong>Approach:</strong> In modern transformers (GPT, BERT, LLaMA), embeddings are trained jointly with the entire model on the language modeling task.
+                </div>
+                <div class="architecture-diagram">
+                    <div class="layer-box">
+                        <div class="layer-title">Step 1: Random Initialization</div>
+                        <div class="layer-desc">Start with random embeddings</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+# Initialize embedding matrix
+import numpy as np
+embedding_matrix = np.random.randn(50257, ${state.embDim}) * 0.02
+
+# Each token starts with random vector
+"cat" → [0.01, -0.03, 0.02, ...]  (meaningless)
+"dog" → [-0.01, 0.02, -0.01, ...] (meaningless)
+                        </div>
+                    </div>
+                    <div class="layer-box">
+                        <div class="layer-title">Step 2: Forward Pass</div>
+                        <div class="layer-desc">Text flows through transformer</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+Input: "The cat sat on the mat"
+1. Tokenize → [1000, 2034, 3567, ...]
+2. Lookup embeddings from matrix
+3. Add positional encoding
+4. Pass through ${state.numLayers} transformer layers
+5. Predict next token
+                        </div>
+                    </div>
+                    <div class="layer-box">
+                        <div class="layer-title">Step 3: Compute Loss</div>
+                        <div class="layer-desc">How wrong were predictions?</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+# Predict next token at each position
+True:      ["cat", "sat", "on", "the", "mat"]
+Predicted: ["dog", "ran", "in", "a", "rug"]
+Loss: 2.87 (cross-entropy)
+                        </div>
+                    </div>
+                    <div class="layer-box" style="margin-bottom: 0;">
+                        <div class="layer-title">Step 4: Backpropagation</div>
+                        <div class="layer-desc">Update ALL parameters including embeddings</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+# Gradients flow back to embedding matrix
+∂Loss/∂embedding_matrix
+
+# Update each used embedding
+embedding_matrix[token_id] -= learning_rate * gradient
+
+# Example: "cat" embedding gets updated
+Before: [0.01, -0.03, 0.02, ...]
+After:  [0.02, -0.02, 0.03, ...]  (slightly adjusted)
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            // Training dynamics
+            addStep(7, 'Embedding Training Dynamics', `
+                <div class="info-box">
+                    <strong>How embeddings evolve during training:</strong>
+                </div>
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <div class="comparison-title">Epoch 1 (Random)</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Embeddings:</strong><br>
+                            king: [0.01, -0.03, ...]<br>
+                            queen: [-0.02, 0.01, ...]<br>
+                            cat: [0.02, -0.01, ...]<br><br>
+                            similarity(king, queen) = 0.05<br>
+                            ❌ No semantic structure
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Epoch 100 (Emerging)</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Embeddings:</strong><br>
+                            king: [0.23, 0.45, ...]<br>
+                            queen: [0.21, 0.43, ...]<br>
+                            cat: [-0.34, 0.12, ...]<br><br>
+                            similarity(king, queen) = 0.65<br>
+                            ⚡ Basic grouping emerging
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Epoch 1000 (Structured)</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Embeddings:</strong><br>
+                            king: [0.87, 0.34, ...]<br>
+                            queen: [0.85, 0.32, ...]<br>
+                            cat: [-0.62, 0.78, ...]<br><br>
+                            similarity(king, queen) = 0.92<br>
+                            ✅ Strong semantic structure
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Converged</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Properties:</strong><br>
+                            • Similar words cluster together<br>
+                            • Analogies work (king-man+woman≈queen)<br>
+                            • Syntactic patterns captured<br>
+                            • Semantic relationships preserved
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            // Vector space properties
+            addStep(8, 'Learned Embedding Space Properties', `
+                <div class="info-box">
+                    <strong>What embeddings learn:</strong> The ${state.embDim}-dimensional space organizes words by meaning, grammar, and relationships.
+                </div>
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <div class="comparison-title">1. Semantic Similarity</div>
+                        <div class="code-block" style="margin-top: 0.5rem; font-size: 0.8rem;">
+dog ≈ cat ≈ pet
+car ≈ automobile ≈ vehicle
+happy ≈ joyful ≈ glad
+
+similarity(dog, cat) = 0.85
+similarity(dog, car) = 0.12
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">2. Analogies</div>
+                        <div class="code-block" style="margin-top: 0.5rem; font-size: 0.8rem;">
+king - man + woman ≈ queen
+Paris - France + Italy ≈ Rome
+walked - walk + run ≈ ran
+
+# Vector arithmetic!
+v_king - v_man + v_woman
+≈ v_queen
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">3. Syntactic Patterns</div>
+                        <div class="code-block" style="margin-top: 0.5rem; font-size: 0.8rem;">
+# Plurals
+cat - cats ≈ dog - dogs
+
+# Tenses
+walk - walked ≈ talk - talked
+
+# Comparatives
+good - better ≈ bad - worse
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">4. Clustering</div>
+                        <div class="code-block" style="margin-top: 0.5rem; font-size: 0.8rem;">
+# Animals cluster together
+{dog, cat, bird, fish, ...}
+
+# Countries cluster together
+{USA, China, France, ...}
+
+# Verbs cluster together
+{run, walk, jump, swim, ...}
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            // Contextual embeddings
+            addStep(9, 'Static vs Contextual Embeddings', `
+                <div class="info-box">
+                    <strong>Evolution:</strong> Modern models use contextual embeddings that change based on context.
+                </div>
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <div class="comparison-title">Static Embeddings</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Word2Vec, GloVe, FastText</strong><br><br>
+                            Same vector regardless of context:<br><br>
+                            "I went to the <strong>bank</strong> to deposit money"<br>
+                            → bank = [0.23, 0.45, ...]<br><br>
+                            "I sat by the river <strong>bank</strong>"<br>
+                            → bank = [0.23, 0.45, ...]<br><br>
+                            ❌ Can't handle polysemy (multiple meanings)
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Contextual Embeddings</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>BERT, GPT, Modern Transformers</strong><br><br>
+                            Different vectors based on context:<br><br>
+                            "I went to the <strong>bank</strong> to deposit money"<br>
+                            → bank = [0.23, 0.89, ...] (financial)<br><br>
+                            "I sat by the river <strong>bank</strong>"<br>
+                            → bank = [0.45, -0.12, ...] (geographical)<br><br>
+                            ✅ Captures context-dependent meaning!
+                        </div>
+                    </div>
+                </div>
+                <div class="info-box" style="margin-top: 1rem;">
+                    <strong>How it works:</strong> Initial embedding from lookup table → Transformed by ${state.numLayers} attention layers → Final contextual representation that understands surrounding words
+                </div>
+            `);
+
+            // Impact of parameters
+            addStep(10, 'Impact of Embedding Dimension', `
+                <div class="info-box">
+                    <strong>Current setting:</strong> ${state.embDim} dimensions
+                </div>
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <div class="comparison-title">Small (128-256)</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Pros:</strong><br>
+                            • Fast training & inference<br>
+                            • Low memory usage<br>
+                            • Good for simple tasks<br><br>
+                            <strong>Cons:</strong><br>
+                            • Limited expressiveness<br>
+                            • Can't capture complex relationships<br>
+                            • Lower quality on hard tasks
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Medium (512-768)</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Pros:</strong><br>
+                            • Good balance<br>
+                            • Reasonable speed<br>
+                            • Captures most relationships<br><br>
+                            <strong>Cons:</strong><br>
+                            • Moderate memory use<br>
+                            • May struggle with very nuanced concepts
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Large (1024-2048)</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Pros:</strong><br>
+                            • Highly expressive<br>
+                            • Captures subtle relationships<br>
+                            • Best quality<br><br>
+                            <strong>Cons:</strong><br>
+                            • Slower training<br>
+                            • High memory usage<br>
+                            • May overfit on small datasets
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Very Large (4096+)</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Pros:</strong><br>
+                            • Maximum expressiveness<br>
+                            • Can capture everything<br>
+                            • Used in largest models (GPT-4, etc.)<br><br>
+                            <strong>Cons:</strong><br>
+                            • Very expensive<br>
+                            • Requires massive data<br>
+                            • Diminishing returns
+                        </div>
+                    </div>
+                </div>
+                <div class="metric-grid" style="margin-top: 1.5rem;">
+                    <div class="metric-card">
+                        <div class="metric-value">${state.embDim}</div>
+                        <div class="metric-label">Current Dim</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${(50257 * state.embDim / 1000000).toFixed(1)}M</div>
+                        <div class="metric-label">Params</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${(state.embDim * 4 / 1000).toFixed(1)}KB</div>
+                        <div class="metric-label">Memory/Token</div>
+                    </div>
+                </div>
+            `);
+
+            // Advanced techniques
+            addStep(11, 'Advanced Embedding Techniques', `
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <div class="comparison-title">Subword Tokenization</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>BPE, WordPiece, SentencePiece</strong><br><br>
+                            Instead of whole words:<br>
+                            "unhappiness"<br>
+                            → ["un", "happiness"]<br><br>
+                            <strong>Benefits:</strong><br>
+                            • Handle rare words<br>
+                            • Smaller vocabulary<br>
+                            • Better generalization<br>
+                            • Work across languages
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Character-Level</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Individual characters</strong><br><br>
+                            "cat" → ["c", "a", "t"]<br><br>
+                            <strong>Benefits:</strong><br>
+                            • Tiny vocabulary (~100)<br>
+                            • No OOV words<br>
+                            • Learns morphology<br><br>
+                            <strong>Drawbacks:</strong><br>
+                            • Longer sequences<br>
+                            • Harder to learn
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Byte-Level</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Raw bytes (GPT-4 style)</strong><br><br>
+                            Fixed vocabulary: 256 bytes<br><br>
+                            <strong>Benefits:</strong><br>
+                            • Universal (any language)<br>
+                            • No tokenization issues<br>
+                            • Handles any text/code<br><br>
+                            <strong>Used by:</strong><br>
+                            GPT-4, LLaMA, modern LLMs
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Learned Positional</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            <strong>Instead of sinusoidal</strong><br><br>
+                            Learnable position embeddings:<br>
+                            pos_emb[0], pos_emb[1], ...<br><br>
+                            <strong>Benefits:</strong><br>
+                            • Can adapt to task<br>
+                            • Potentially more expressive<br><br>
+                            <strong>Drawback:</strong><br>
+                            • Fixed max length
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            // Summary
+            addStep(12, 'Embedding Training Summary', `
+                <div class="info-box">
+                    <strong>Key Takeaways:</strong>
+                </div>
+                <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 1.5rem; margin-top: 1rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--accent-primary);">1. Purpose:</strong><br>
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Transform discrete tokens into continuous vectors that capture semantic meaning
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--accent-primary);">2. Training Methods:</strong><br>
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                        • Word2Vec (CBOW/Skip-gram): Predict word from context or vice versa<br>
+                        • Modern: Joint training with transformer on language modeling task<br>
+                        • Result: Similar words get similar vectors
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--accent-primary);">3. Properties Learned:</strong><br>
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                        • Semantic similarity (cat ≈ dog)<br>
+                        • Analogies (king - man + woman ≈ queen)<br>
+                        • Syntactic patterns (walk/walked, cat/cats)<br>
+                        • Contextual meaning (modern transformers)
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <strong style="color: var(--accent-primary);">4. Dimension Impact:</strong><br>
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                        • Small (128): Fast but limited<br>
+                        • Medium (512): Good balance ✓<br>
+                        • Large (1024+): Expressive but expensive<br>
+                        • Current: ${state.embDim} dimensions = ${(50257 * state.embDim / 1000000).toFixed(1)}M parameters
+                        </span>
+                    </div>
+                    <div>
+                        <strong style="color: var(--accent-primary);">5. Evolution:</strong><br>
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Static (Word2Vec) → Contextual (BERT/GPT) → Massive scale (GPT-4/Claude)
+                        </span>
+                    </div>
+                </div>
+                <div class="code-block" style="margin-top: 1.5rem;">
+# Complete embedding pipeline in modern LLMs
+1. Tokenize text → token IDs
+2. Lookup initial embedding from matrix
+3. Add positional encoding
+4. Transform through ${state.numLayers} attention layers
+5. Each layer refines the embedding based on context
+6. Final embedding is highly contextual and task-specific
+                </div>
+            `);
+        }
+
+        function processInput() {
+            state.inputText = inputText.value.trim();
+            if (!state.inputText) {
+                alert('Please enter some text to process');
+                return;
+            }
+            
+            visualizationArea.innerHTML = '';
+            
+            if (state.mode === 'inference') {
+                renderInferencePipeline();
+            } else {
+                renderTrainingPipeline();
+            }
+        }
+
+        function renderInferencePipeline() {
+            const tokens = tokenize(state.inputText);
+            
+            // Step 1: Tokenization
+            addStep(1, 'Tokenization', `
+                <div class="info-box">
+                    <strong>What happens:</strong> The input text is split into tokens (words or subwords) and converted to token IDs.
+                </div>
+                <div class="token-flow">
+                    ${tokens.map(t => `<div class="token">${t}</div>`).join('<div class="arrow">→</div>')}
+                </div>
+                <div class="code-block">
+Token IDs: [${tokens.map((_, i) => 1000 + i * 100).join(', ')}]
+Vocabulary Size: 50,257 tokens</div>
+            `);
+
+            // Step 2: Embedding
+            addStep(2, 'Token Embedding', `
+                <div class="info-box">
+                    <strong>What happens:</strong> Each token ID is converted into a dense vector of dimension ${state.embDim}. This vector captures semantic meaning.
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">${state.embDim}</div>
+                        <div class="metric-label">Embedding Dim</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${tokens.length}</div>
+                        <div class="metric-label">Sequence Length</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${tokens.length * state.embDim}</div>
+                        <div class="metric-label">Total Parameters</div>
+                    </div>
+                </div>
+                <div class="code-block">
+Shape: [batch=1, seq_len=${tokens.length}, d_model=${state.embDim}]
+Example vector for "${tokens[0]}": [${generateVector(8).join(', ')}, ...]
+                </div>
+                <div class="info-box" style="margin-top: 1rem;">
+                    <strong>Parameter Impact:</strong> Increasing embedding dimension allows the model to capture more nuanced semantic relationships but increases computational cost.
+                </div>
+            `);
+
+            // Step 3: Positional Encoding
+            addStep(3, 'Positional Encoding', `
+                <div class="info-box">
+                    <strong>What happens:</strong> Position information is added to embeddings using sine/cosine functions, allowing the model to understand word order.
+                </div>
+                <div class="code-block">
+PE(pos, 2i) = sin(pos / 10000^(2i/d_model))
+PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
+
+Position encodings added to embeddings element-wise
+                </div>
+                <div class="architecture-diagram">
+                    ${tokens.map((token, i) => `
+                        <div style="display: flex; align-items: center; margin: 0.5rem 0;">
+                            <div style="background: var(--bg-secondary); padding: 0.5rem 1rem; border-radius: 6px; margin-right: 1rem; min-width: 100px;">${token}</div>
+                            <div style="color: var(--accent-primary);">+</div>
+                            <div style="background: var(--bg-tertiary); padding: 0.5rem 1rem; border-radius: 6px; margin-left: 1rem;">Position ${i + 1}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `);
+
+            // Step 4: Multi-Head Attention
+            const attentionDesc = {
+                'full': 'Full Self-Attention: Each token attends to all other tokens with separate Q, K, V for each head',
+                'gqa': 'Grouped Query Attention: Multiple query heads share key and value heads, reducing memory usage',
+                'flash': 'Flash Attention: Memory-efficient attention using kernel fusion and tiling'
+            };
+
+            addStep(4, `Multi-Head ${state.attentionType.toUpperCase()} Attention`, `
+                <div class="info-box">
+                    <strong>What happens:</strong> ${attentionDesc[state.attentionType]}
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">${state.numHeads}</div>
+                        <div class="metric-label">Attention Heads</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${state.embDim / state.numHeads}</div>
+                        <div class="metric-label">Head Dimension</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${state.attentionType === 'gqa' ? Math.ceil(state.numHeads / 4) : state.numHeads}</div>
+                        <div class="metric-label">${state.attentionType === 'gqa' ? 'KV Heads' : 'Total Heads'}</div>
+                    </div>
+                </div>
+                
+                <div class="comparison-grid" style="margin-top: 1.5rem;">
+                    <div class="comparison-item">
+                        <div class="comparison-title">Query (Q)</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">What the token is looking for</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+Shape: [${tokens.length}, ${state.embDim}]
+Params: ${state.embDim * state.embDim}
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Key (K)</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">What the token offers</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+Shape: [${tokens.length}, ${state.embDim}]
+Params: ${state.embDim * state.embDim}
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Value (V)</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">The actual content</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+Shape: [${tokens.length}, ${state.embDim}]
+Params: ${state.embDim * state.embDim}
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Attention Scores</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Similarity matrix Q·K^T / √d_k</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+Shape: [${tokens.length}, ${tokens.length}]
+Softmax applied
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1.5rem;">
+                    <div class="section-title" style="font-size: 0.9rem; margin-bottom: 1rem;">Attention Heatmap (Example Head)</div>
+                    ${renderAttentionHeatmap(tokens)}
+                </div>
+
+                <div class="info-box" style="margin-top: 1rem;">
+                    <strong>Parameter Impact:</strong><br>
+                    • More heads (${state.numHeads}): Captures different types of relationships in parallel<br>
+                    • ${state.attentionType === 'gqa' ? 'GQA reduces memory by ' + Math.round((1 - (Math.ceil(state.numHeads / 4) / state.numHeads)) * 100) + '% with minimal quality loss' : ''}<br>
+                    • ${state.attentionType === 'flash' ? 'Flash Attention: 2-4x faster with 10-20x less memory usage' : ''}
+                </div>
+            `);
+
+            // Step 5: Feed Forward
+            addStep(5, 'Feed-Forward Network', `
+                <div class="info-box">
+                    <strong>What happens:</strong> Each position passes through a 2-layer fully connected network independently. Typically expands to 4x embedding dimension.
+                </div>
+                <div class="architecture-diagram">
+                    <div class="layer-box">
+                        <div class="layer-title">Input</div>
+                        <div class="layer-desc">Dimension: ${state.embDim}</div>
+                    </div>
+                    <div class="layer-box">
+                        <div class="layer-title">Hidden Layer (ReLU/GELU)</div>
+                        <div class="layer-desc">Dimension: ${state.embDim * 4}</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+Parameters: ${state.embDim * (state.embDim * 4)} weights
+Activation: GELU(x) = x·Φ(x)
+                        </div>
+                    </div>
+                    <div class="layer-box" style="margin-bottom: 0;">
+                        <div class="layer-title">Output</div>
+                        <div class="layer-desc">Dimension: ${state.embDim}</div>
+                        <div class="code-block" style="margin-top: 0.5rem;">
+Parameters: ${state.embDim * 4 * state.embDim} weights
+                        </div>
+                    </div>
+                </div>
+                <div class="info-box" style="margin-top: 1rem;">
+                    <strong>Total FFN Parameters:</strong> ${(state.embDim * state.embDim * 4 * 2).toLocaleString()} per layer
+                </div>
+            `);
+
+            // Step 6: Layer Norm & Residual
+            addStep(6, 'Layer Normalization & Residual Connections', `
+                <div class="info-box">
+                    <strong>What happens:</strong> Stabilizes training with layer normalization and preserves information flow with residual connections.
+                </div>
+                <div class="code-block">
+# Residual Connection
+output = LayerNorm(x + Attention(x))
+output = LayerNorm(output + FeedForward(output))
+
+# Layer Norm formula
+LN(x) = γ * (x - μ) / √(σ² + ε) + β
+
+where μ = mean, σ = std deviation
+                </div>
+                <div class="info-box" style="margin-top: 1rem;">
+                    This pattern repeats for all <strong>${state.numLayers}</strong> transformer layers. Each layer refines the representations.
+                </div>
+            `);
+
+            // Step 7: Output & Prediction
+            addStep(7, 'Output Layer & Next Token Prediction', `
+                <div class="info-box">
+                    <strong>What happens:</strong> The final hidden state is projected to vocabulary size (50,257) and softmax is applied to get probabilities.
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">${(state.embDim * 50257 / 1000000).toFixed(1)}M</div>
+                        <div class="metric-label">Output Params</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${state.temperature}</div>
+                        <div class="metric-label">Temperature</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">50,257</div>
+                        <div class="metric-label">Vocab Size</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1.5rem;">
+                    <div class="section-title" style="font-size: 0.9rem; margin-bottom: 1rem;">Top Predictions (with temperature=${state.temperature})</div>
+                    ${renderPredictions(state.temperature)}
+                </div>
+
+                <div class="info-box" style="margin-top: 1rem;">
+                    <strong>Temperature Impact:</strong><br>
+                    • Temperature = ${state.temperature}: ${state.temperature < 0.5 ? 'Very deterministic, picks most likely tokens' : state.temperature < 1.0 ? 'Balanced creativity and coherence' : 'High creativity, more random sampling'}<br>
+                    • Formula: softmax(logits / temperature)<br>
+                    • Lower temperature → sharper distribution, higher temperature → flatter distribution
+                </div>
+            `);
+
+            // Step 8: Summary
+            addStep(8, 'Architecture Summary', `
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">${calculateTotalParams()}M</div>
+                        <div class="metric-label">Total Parameters</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${state.numLayers}</div>
+                        <div class="metric-label">Transformer Layers</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${state.numHeads}</div>
+                        <div class="metric-label">Attention Heads</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${state.embDim}</div>
+                        <div class="metric-label">Hidden Size</div>
+                    </div>
+                </div>
+
+                <div class="info-box" style="margin-top: 1.5rem;">
+                    <strong>Key Insights:</strong><br>
+                    • Each transformer layer processes all tokens in parallel<br>
+                    • Self-attention allows tokens to exchange information<br>
+                    • Residual connections help gradient flow during training<br>
+                    • Layer normalization stabilizes training<br>
+                    • Feed-forward networks process each position independently<br>
+                    • The model learns by predicting the next token and adjusting weights
+                </div>
+            `);
+        }
+
+        function renderTrainingPipeline() {
+            const tokens = tokenize(state.inputText);
+            
+            addStep(1, 'Training Setup', `
+                <div class="info-box">
+                    <strong>What happens:</strong> In training mode, we have both input and target sequences. The model learns by predicting each next token.
+                </div>
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <div class="comparison-title">Input Sequence</div>
+                        <div class="token-flow" style="margin-top: 1rem;">
+                            ${tokens.slice(0, -1).map(t => `<div class="token">${t}</div>`).join('')}
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Target Sequence (shifted)</div>
+                        <div class="token-flow" style="margin-top: 1rem;">
+                            ${tokens.slice(1).map(t => `<div class="token">${t}</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="code-block" style="margin-top: 1rem;">
+# Teacher Forcing: use ground truth as input
+Input:  "${tokens.slice(0, -1).join(' ')}"
+Target: "${tokens.slice(1).join(' ')}"
+
+The model learns to predict token[i+1] given tokens[0:i]
+                </div>
+            `);
+
+            addStep(2, 'Forward Pass (Same as Inference)', `
+                <div class="info-box">
+                    The input flows through the same architecture:<br>
+                    1. Tokenization → Embedding (${state.embDim}d)<br>
+                    2. Positional Encoding<br>
+                    3. ${state.numLayers}x Transformer Layers (${state.numHeads} heads each)<br>
+                    4. Output projection to vocabulary
+                </div>
+                <div class="architecture-diagram">
+                    ${Array.from({length: Math.min(state.numLayers, 3)}, (_, i) => `
+                        <div class="layer-box">
+                            <div class="layer-title">Transformer Layer ${i + 1}</div>
+                            <div class="layer-desc">Multi-Head Attention → Add & Norm → Feed Forward → Add & Norm</div>
+                        </div>
+                    `).join('')}
+                    ${state.numLayers > 3 ? `<div style="text-align: center; color: var(--text-secondary); margin: 1rem 0;">... ${state.numLayers - 3} more layers ...</div>` : ''}
+                </div>
+            `);
+
+            addStep(3, 'Loss Calculation', `
+                <div class="info-box">
+                    <strong>What happens:</strong> Cross-entropy loss measures how different the predicted distribution is from the true distribution.
+                </div>
+                <div class="code-block">
+# For each position, compute cross-entropy loss
+loss = -log(P(target_token | context))
+
+# Example for predicting "${tokens[tokens.length - 1]}"
+Predicted probabilities: P("${tokens[tokens.length - 1]}") = 0.45
+True label: "${tokens[tokens.length - 1]}" (one-hot encoded)
+Loss = -log(0.45) = 0.80
+
+# Total loss is average over all positions
+Total Loss = (loss₁ + loss₂ + ... + lossₙ) / n
+                </div>
+                <div class="metric-grid" style="margin-top: 1rem;">
+                    <div class="metric-card">
+                        <div class="metric-value">0.80</div>
+                        <div class="metric-label">Example Loss</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${tokens.length - 1}</div>
+                        <div class="metric-label">Predictions</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">2.4</div>
+                        <div class="metric-label">Perplexity</div>
+                    </div>
+                </div>
+            `);
+
+            addStep(4, 'Backpropagation', `
+                <div class="info-box">
+                    <strong>What happens:</strong> Gradients flow backwards through the network to update all parameters.
+                </div>
+                <div class="code-block">
+# Compute gradients using chain rule
+∂Loss/∂W_output → ∂Loss/∂W_layer_6 → ... → ∂Loss/∂W_embedding
+
+# Gradient flow through attention
+∂Loss/∂Q, ∂Loss/∂K, ∂Loss/∂V for each head
+
+# Gradient flow through feed-forward
+∂Loss/∂W1, ∂Loss/∂W2 for each layer
+                </div>
+                <div class="info-box" style="margin-top: 1rem;">
+                    <strong>Key Techniques:</strong><br>
+                    • Residual connections help gradients flow to early layers<br>
+                    • Layer normalization prevents vanishing gradients<br>
+                    • Gradient clipping prevents exploding gradients<br>
+                    • Adam optimizer adapts learning rate per parameter
+                </div>
+            `);
+
+            addStep(5, 'Parameter Update', `
+                <div class="info-box">
+                    <strong>What happens:</strong> All ${calculateTotalParams()}M parameters are updated based on gradients.
+                </div>
+                <div class="code-block">
+# Adam optimizer update rule
+m_t = β₁·m_{t-1} + (1-β₁)·∇W
+v_t = β₂·v_{t-1} + (1-β₂)·(∇W)²
+W_new = W_old - α·m_t / (√v_t + ε)
+
+# Default hyperparameters
+Learning rate (α): 0.0001
+β₁: 0.9 (momentum)
+β₂: 0.999 (RMSprop)
+ε: 1e-8 (numerical stability)
+                </div>
+                <div class="metric-grid" style="margin-top: 1rem;">
+                    <div class="metric-card">
+                        <div class="metric-value">${calculateTotalParams()}M</div>
+                        <div class="metric-label">Updated Params</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0.0001</div>
+                        <div class="metric-label">Learning Rate</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">1</div>
+                        <div class="metric-label">Training Step</div>
+                    </div>
+                </div>
+            `);
+
+            addStep(6, 'Training Dynamics', `
+                <div class="info-box">
+                    <strong>Training Process:</strong> The model trains over millions of examples, gradually improving predictions.
+                </div>
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <div class="comparison-title">Early Training</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            • High loss (~10.0)<br>
+                            • Random predictions<br>
+                            • No coherent patterns<br>
+                            • Learning basic statistics
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Mid Training</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            • Medium loss (~3.0)<br>
+                            • Basic grammar<br>
+                            • Common patterns emerge<br>
+                            • Understanding syntax
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Late Training</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            • Low loss (~2.0)<br>
+                            • Coherent text<br>
+                            • Complex reasoning<br>
+                            • Nuanced understanding
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Converged</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            • Minimal loss (~1.5)<br>
+                            • High quality output<br>
+                            • Generalizes well<br>
+                            • Ready for deployment
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            addStep(7, 'Impact of Hyperparameters', `
+                <div class="info-box">
+                    <strong>How current settings affect training:</strong>
+                </div>
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <div class="comparison-title">Embedding Dim: ${state.embDim}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            ${state.embDim < 384 ? '⚠️ Small - limited capacity, faster training' : state.embDim < 768 ? '✓ Balanced - good capacity/speed tradeoff' : '⚡ Large - high capacity, slower training'}
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Heads: ${state.numHeads}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            ${state.numHeads < 8 ? '⚠️ Few heads - simpler attention patterns' : state.numHeads < 12 ? '✓ Standard - captures diverse patterns' : '⚡ Many heads - very expressive'}
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Layers: ${state.numLayers}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            ${state.numLayers < 6 ? '⚠️ Shallow - limited depth' : state.numLayers < 10 ? '✓ Medium depth - good performance' : '⚡ Deep - complex reasoning'}
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-title">Attention: ${state.attentionType.toUpperCase()}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            ${state.attentionType === 'full' ? '✓ Full quality, slower, more memory' : state.attentionType === 'gqa' ? '⚡ 95% quality, faster, less memory' : '🚀 Flash: same quality, 2-4x faster'}
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+
+        function addStep(num, title, content) {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'step-container';
+            stepDiv.style.animationDelay = `${(num - 1) * 0.1}s`;
+            stepDiv.innerHTML = `
+                <div class="step-header">
+                    <div class="step-number">${num}</div>
+                    <div class="step-title">${title}</div>
+                </div>
+                <div class="step-content">${content}</div>
+            `;
+            visualizationArea.appendChild(stepDiv);
+        }
+
+        function tokenize(text) {
+            // Simple word-based tokenization for demo
+            return text.trim().split(/\s+/);
+        }
+
+        function generateVector(size) {
+            return Array.from({length: size}, () => (Math.random() * 2 - 1).toFixed(3));
+        }
+
+        function renderAttentionHeatmap(tokens) {
+            const size = tokens.length;
+            const gridStyle = `grid-template-columns: repeat(${size + 1}, 1fr);`;
+            
+            let html = `<div class="attention-heatmap" style="${gridStyle}">`;
+            
+            // Header row
+            html += `<div class="attention-cell" style="background: transparent;"></div>`;
+            tokens.forEach(token => {
+                html += `<div class="attention-cell" style="background: transparent; color: var(--accent-primary); font-weight: 600;">${token}</div>`;
+            });
+            
+            // Attention matrix
+            tokens.forEach((rowToken, i) => {
+                html += `<div class="attention-cell" style="background: transparent; color: var(--accent-primary); font-weight: 600;">${rowToken}</div>`;
+                tokens.forEach((colToken, j) => {
+                    // Simulate attention scores (higher for nearby tokens and self)
+                    const distance = Math.abs(i - j);
+                    const score = Math.max(0.1, 1 - distance * 0.2 + (i === j ? 0.3 : 0));
+                    const opacity = score;
+                    const color = `rgba(0, 255, 204, ${opacity})`;
+                    html += `<div class="attention-cell" style="background: ${color}; color: ${opacity > 0.5 ? 'var(--bg-primary)' : 'var(--text-primary)'};">${score.toFixed(2)}</div>`;
+                });
+            });
+            
+            html += `</div>`;
+            return html;
+        }
+
+        function renderPredictions(temperature) {
+            // Simulate predictions with different probabilities based on temperature
+            const predictions = [
+                { token: 'mat', prob: 0.45 },
+                { token: 'floor', prob: 0.25 },
+                { token: 'chair', prob: 0.15 },
+                { token: 'table', prob: 0.08 },
+                { token: 'ground', prob: 0.07 }
+            ];
+            
+            // Apply temperature scaling
+            const scaledProbs = predictions.map(p => {
+                const logit = Math.log(p.prob);
+                const scaledLogit = logit / temperature;
+                return { ...p, scaledLogit };
+            });
+            
+            // Softmax
+            const maxLogit = Math.max(...scaledProbs.map(p => p.scaledLogit));
+            const expSums = scaledProbs.map(p => Math.exp(p.scaledLogit - maxLogit));
+            const sumExp = expSums.reduce((a, b) => a + b, 0);
+            const finalProbs = scaledProbs.map((p, i) => ({
+                token: p.token,
+                prob: expSums[i] / sumExp
+            }));
+            
+            return finalProbs.map(p => `
+                <div class="prediction-item">
+                    <span class="prediction-token">"${p.token}"</span>
+                    <span class="prediction-prob">${(p.prob * 100).toFixed(1)}%</span>
+                </div>
+            `).join('');
+        }
+
+        function calculateTotalParams() {
+            // Simplified calculation
+            const embParams = state.embDim * 50257; // embedding matrix
+            const attentionParams = state.numLayers * (4 * state.embDim * state.embDim); // Q,K,V,O per layer
+            const ffnParams = state.numLayers * (2 * state.embDim * state.embDim * 4); // FFN per layer
+            const total = (embParams + attentionParams + ffnParams) / 1000000;
+            return total.toFixed(1);
+        }
+
+        // Initial load
+        window.addEventListener('load', () => {
+            document.querySelector('.app-container').style.opacity = '0';
+            setTimeout(() => {
+                document.querySelector('.app-container').style.opacity = '1';
+                document.querySelector('.app-container').style.transition = 'opacity 0.5s ease';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
